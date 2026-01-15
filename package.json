@@ -1,5 +1,5 @@
 {
-  "name": "@syster/diagram-ui",
+  "name": "@opensyster/diagram-ui",
   "version": "0.1.0",
   "type": "module",
   "main": "src/index.ts",
@@ -9,9 +9,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@syster/diagram-core": "^0.1.0",
     "@xyflow/react": "^12.10.0",
-    "react": "^18.2.0"
+    "react": "^18.2.0",
+    "@opensyster/diagram-core": "^0.1.0"
   },
   "devDependencies": {
     "@testing-library/react": "^16.3.1",
