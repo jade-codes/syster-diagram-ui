@@ -7,7 +7,7 @@
   "scripts": {
     "test": "bun test",
     "typecheck": "tsc --noEmit",
-    "build": "mkdir -p dist && echo 'Build process will be configured later' > dist/README.md"
+    "build": "echo 'No build needed - source package'"
   },
   "dependencies": {
     "@xyflow/react": "^12.10.0",
