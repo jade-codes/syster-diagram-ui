@@ -32,16 +32,19 @@ interface SysMLNodeProps {
  * ```
  */
 export function createSysMLNode(config: NodeConfig): FC<SysMLNodeProps> {
-  const NodeComponent: FC<SysMLNodeProps> = ({ id, data }) => (
-    <SysMLNode
-      id={id}
-      data={data}
-      borderColor={config.borderColor}
-      stereotype={config.stereotype}
-      showFeatures={config.showFeatures}
-      showDirection={config.showDirection}
-    />
-  );
+  const NodeComponent: FC<SysMLNodeProps> = ({ id, data }) => {
+    console.log(`[SysMLNode] Rendering node: id=${id}, data=`, data, 'config=', config);
+    return (
+      <SysMLNode
+        id={id}
+        data={data}
+        borderColor={config.borderColor}
+        stereotype={config.stereotype}
+        showFeatures={config.showFeatures}
+        showDirection={config.showDirection}
+      />
+    );
+  };
   NodeComponent.displayName = `${config.stereotype.replace(/\s+/g, '')}Node`;
   return NodeComponent;
 }

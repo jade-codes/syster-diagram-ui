@@ -12,7 +12,7 @@
   "dependencies": {
     "@xyflow/react": "^12.10.0",
     "react": "^18.2.0",
-    "@opensyster/diagram-core": "^0.0.2-alpha"
+    "@opensyster/diagram-core": "file:../syster-diagram-core"
   },
   "devDependencies": {
     "@testing-library/react": "^16.3.1",

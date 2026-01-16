@@ -159,7 +159,7 @@ export const NODE_CONFIGS: Record<string, NodeConfig> = {
   [NODE_TYPES.RENDERING_DEF]:      def(COLORS.view, 'rendering'),
 
   // ==================== Other (Slate) ====================
-  // Allocations, enumerations, metadata
+  // Allocations, enumerations, metadata, packages
   
   [NODE_TYPES.ALLOCATION_DEF]:     def(COLORS.other, 'allocation'),
   [NODE_TYPES.ALLOCATION_USAGE]:   usage(COLORS.other, 'allocate'),
@@ -168,4 +168,24 @@ export const NODE_CONFIGS: Record<string, NodeConfig> = {
   [NODE_TYPES.ENUMERATION_USAGE]:  usage(COLORS.other, 'enum'),
   
   [NODE_TYPES.METADATA_DEF]:       def(COLORS.other, 'metadata'),
+  
+  // Packages and other container types
+  'Package': {
+    borderColor: COLORS.other,
+    stereotype: 'package',
+    showFeatures: false,
+  },
+  
+  'Feature': {
+    borderColor: COLORS.structural,
+    stereotype: 'feature',
+    showFeatures: true,
+  },
+  
+  // Default fallback for unknown types
+  'default': {
+    borderColor: COLORS.other,
+    stereotype: '',
+    showFeatures: false,
+  },
 };
