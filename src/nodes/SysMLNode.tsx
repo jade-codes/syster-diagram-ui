@@ -1,6 +1,6 @@
 import React from 'react';
 import { Handle, Position } from '@xyflow/react';
-import type { SymbolData } from '@syster/diagram-core';
+import type { SymbolData } from '@opensyster/diagram-core';
 
 export interface SysMLNodeProps {
   id: string;

@@ -1,4 +1,4 @@
-import { NODE_TYPES } from '@syster/diagram-core';
+import { NODE_TYPES } from '@opensyster/diagram-core';
 
 /**
  * Configuration for a SysML node's visual appearance.

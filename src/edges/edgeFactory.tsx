@@ -5,7 +5,7 @@ import {
   getSmoothStepPath,
   type EdgeProps,
 } from '@xyflow/react';
-import { EDGE_TYPES } from '@syster/diagram-core';
+import { EDGE_TYPES } from '@opensyster/diagram-core';
 import { getEdgeConfig, type EdgeConfig } from './edgeConfig';
 
 /**

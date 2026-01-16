@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import { SysMLNode } from './SysMLNode';
 import { NodeConfig, NODE_CONFIGS } from './nodeConfig';
-import type { SymbolData } from '@syster/diagram-core';
+import type { SymbolData } from '@opensyster/diagram-core';
 
 /**
  * Props for SysML node components.
