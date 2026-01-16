@@ -1,6 +1,6 @@
 import { describe, test, expect, mock, afterEach } from 'bun:test';
 import { render, screen, cleanup } from '@testing-library/react';
-import { NODE_TYPES } from '@syster/diagram-core';
+import { NODE_TYPES } from '@opensyster/diagram-core';
 
 // Mock @xyflow/react before importing components
 mock.module('@xyflow/react', () => ({

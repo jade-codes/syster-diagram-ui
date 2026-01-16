@@ -1,6 +1,6 @@
 import { describe, test, expect, mock, afterEach } from 'bun:test';
 import { render, cleanup } from '@testing-library/react';
-import { EDGE_TYPES } from '@syster/diagram-core';
+import { EDGE_TYPES } from '@opensyster/diagram-core';
 import { MarkerType, Position } from '@xyflow/react';
 
 // Mock @xyflow/react components

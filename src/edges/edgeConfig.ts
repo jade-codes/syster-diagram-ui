@@ -1,4 +1,4 @@
-import { EDGE_TYPES } from '@syster/diagram-core';
+import { EDGE_TYPES } from '@opensyster/diagram-core';
 import { MarkerType } from '@xyflow/react';
 
 /**
