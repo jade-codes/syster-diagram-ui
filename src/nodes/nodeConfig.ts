@@ -1,67 +1,60 @@
 import { NODE_TYPES } from '@opensyster/diagram-core';
+import type { NodeCategory } from '../theme/tokens';
 
 /**
- * Configuration for a SysML node's visual appearance.
+ * Configuration for a SysML node's display properties.
+ * Colors are determined by category + theme at render time.
  */
 export interface NodeConfig {
-  /** Border color for the node */
-  borderColor: string;
+  /** Semantic category for color theming */
+  category: NodeCategory;
   /** Stereotype label (e.g., "part def", "port def") */
   stereotype: string;
   /** Whether to show features list */
   showFeatures?: boolean;
   /** Whether to show direction indicator */
   showDirection?: boolean;
+  /** Render as compact property (no stereotype, smaller) */
+  isProperty?: boolean;
 }
-
-// ========== Color Palette ==========
-// Consistent with Tailwind CSS color scheme
-
-const COLORS = {
-  /** Structural definitions (part, item, attribute) */
-  structural: '#2563eb',    // blue-600
-  /** Ports, interfaces, connections, flows */
-  interface: '#7c3aed',     // violet-600  
-  /** Actions, states, calculations */
-  behavioral: '#059669',    // emerald-600
-  /** Requirements, concerns, constraints */
-  requirement: '#d97706',   // amber-600
-  /** Cases (use case, analysis, verification) */
-  case: '#4f46e5',          // indigo-600
-  /** Views, viewpoints, rendering */
-  view: '#0d9488',          // teal-600
-  /** Other/miscellaneous */
-  other: '#475569',         // slate-600
-} as const;
 
 // ========== Config Builders ==========
 
 /** Create a definition config with features */
-const def = (color: string, name: string): NodeConfig => ({
-  borderColor: color,
+const def = (category: NodeCategory, name: string): NodeConfig => ({
+  category,
   stereotype: `${name} def`,
   showFeatures: true,
 });
 
 /** Create a definition config with direction (for ports) */
-const defDir = (color: string, name: string): NodeConfig => ({
-  borderColor: color,
+const defDir = (category: NodeCategory, name: string): NodeConfig => ({
+  category,
   stereotype: `${name} def`,
+  showFeatures: true,
   showDirection: true,
 });
 
 /** Create a usage config with features */
-const usage = (color: string, name: string): NodeConfig => ({
-  borderColor: color,
+const usage = (category: NodeCategory, name: string): NodeConfig => ({
+  category,
   stereotype: name,
   showFeatures: true,
 });
 
 /** Create a usage config with direction (for ports, refs) */
-const usageDir = (color: string, name: string): NodeConfig => ({
-  borderColor: color,
+const usageDir = (category: NodeCategory, name: string): NodeConfig => ({
+  category,
   stereotype: name,
+  showFeatures: true,
   showDirection: true,
+});
+
+/** Create a property-style config (compact, no stereotype) */
+const property = (category: NodeCategory): NodeConfig => ({
+  category,
+  stereotype: '',
+  isProperty: true,
 });
 
 // ========== Node Configurations ==========
@@ -69,103 +62,135 @@ const usageDir = (color: string, name: string): NodeConfig => ({
 /**
  * SysML v2 node type configurations.
  * 
- * Organized by category, with definitions and usages grouped together.
- * Each category uses a consistent color for visual grouping.
+ * Uses fine-grained categories for distinct colors per element type.
+ * Definitions and usages have different shades within their color family.
  */
 export const NODE_CONFIGS: Record<string, NodeConfig> = {
-  // ==================== Structural (Blue) ====================
-  // Parts, items, attributes, occurrences, individuals
+  // ==================== Structural ====================
+  // Parts (blue family)
+  [NODE_TYPES.PART_DEF]:           def('part-def', 'part'),
+  [NODE_TYPES.PART_USAGE]:         usage('part-usage', 'part'),
   
-  [NODE_TYPES.PART_DEF]:           def(COLORS.structural, 'part'),
-  [NODE_TYPES.PART_USAGE]:         usage(COLORS.structural, 'part'),
+  // Items (sky blue)
+  [NODE_TYPES.ITEM_DEF]:           def('item-def', 'item'),
+  [NODE_TYPES.ITEM_USAGE]:         usage('item-usage', 'item'),
   
-  [NODE_TYPES.ITEM_DEF]:           def(COLORS.structural, 'item'),
-  [NODE_TYPES.ITEM_USAGE]:         usage(COLORS.structural, 'item'),
+  // Attributes (indigo)
+  [NODE_TYPES.ATTRIBUTE_DEF]:      def('attribute', 'attribute'),
+  [NODE_TYPES.ATTRIBUTE_USAGE]:    property('attribute'),
   
-  [NODE_TYPES.ATTRIBUTE_DEF]:      def(COLORS.structural, 'attribute'),
-  [NODE_TYPES.ATTRIBUTE_USAGE]:    usage(COLORS.structural, 'attribute'),
+  // Occurrences (use part colors)
+  [NODE_TYPES.OCCURRENCE_DEF]:     def('part-def', 'occurrence'),
+  [NODE_TYPES.OCCURRENCE_USAGE]:   usage('part-usage', 'occurrence'),
   
-  [NODE_TYPES.OCCURRENCE_DEF]:     def(COLORS.structural, 'occurrence'),
-  [NODE_TYPES.OCCURRENCE_USAGE]:   usage(COLORS.structural, 'occurrence'),
+  // Individuals (use item colors)
+  [NODE_TYPES.INDIVIDUAL_DEF]:     def('item-def', 'individual'),
+  [NODE_TYPES.INDIVIDUAL_USAGE]:   usage('item-usage', 'individual'),
   
-  [NODE_TYPES.INDIVIDUAL_DEF]:     def(COLORS.structural, 'individual'),
-  [NODE_TYPES.INDIVIDUAL_USAGE]:   usage(COLORS.structural, 'individual'),
-  
-  [NODE_TYPES.SNAPSHOT_USAGE]:     usage(COLORS.structural, 'snapshot'),
-  [NODE_TYPES.TIMESLICE_USAGE]:    usage(COLORS.structural, 'timeslice'),
-  [NODE_TYPES.REFERENCE_USAGE]:    usageDir(COLORS.structural, 'ref'),
+  [NODE_TYPES.SNAPSHOT_USAGE]:     usage('item-usage', 'snapshot'),
+  [NODE_TYPES.TIMESLICE_USAGE]:    usage('item-usage', 'timeslice'),
+  [NODE_TYPES.REFERENCE_USAGE]:    property('attribute'),
 
-  // ==================== Interfaces (Purple) ====================
-  // Ports, interfaces, connections, flows
+  // ==================== Interfaces ====================
+  // Ports (violet)
+  [NODE_TYPES.PORT_DEF]:           defDir('port-def', 'port'),
+  [NODE_TYPES.PORT_USAGE]:         usageDir('port-usage', 'port'),
   
-  [NODE_TYPES.PORT_DEF]:           defDir(COLORS.interface, 'port'),
-  [NODE_TYPES.PORT_USAGE]:         usageDir(COLORS.interface, 'port'),
+  // Interfaces (purple)
+  [NODE_TYPES.INTERFACE_DEF]:      def('interface', 'interface'),
+  [NODE_TYPES.INTERFACE_USAGE]:    usage('interface', 'interface'),
   
-  [NODE_TYPES.INTERFACE_DEF]:      def(COLORS.interface, 'interface'),
-  [NODE_TYPES.INTERFACE_USAGE]:    usage(COLORS.interface, 'interface'),
+  // Connections (fuchsia)
+  [NODE_TYPES.CONNECTION_DEF]:     def('connection', 'connection'),
+  [NODE_TYPES.CONNECTION_USAGE]:   usage('connection', 'connection'),
   
-  [NODE_TYPES.CONNECTION_DEF]:     def(COLORS.interface, 'connection'),
-  [NODE_TYPES.CONNECTION_USAGE]:   usage(COLORS.interface, 'connection'),
-  
-  [NODE_TYPES.FLOW_DEF]:           defDir(COLORS.interface, 'flow'),
-  [NODE_TYPES.FLOW_USAGE]:         usageDir(COLORS.interface, 'flow'),
+  // Flows (pink-purple)
+  [NODE_TYPES.FLOW_DEF]:           defDir('flow', 'flow'),
+  [NODE_TYPES.FLOW_USAGE]:         usageDir('flow', 'flow'),
 
-  // ==================== Behavioral (Green) ====================
-  // Actions, states, calculations
+  // ==================== Behavioral ====================
+  // Actions (emerald)
+  [NODE_TYPES.ACTION_DEF]:         def('action-def', 'action'),
+  [NODE_TYPES.ACTION_USAGE]:       usage('action-usage', 'action'),
+  [NODE_TYPES.PERFORM_ACTION_USAGE]: usage('action-usage', 'perform'),
   
-  [NODE_TYPES.ACTION_DEF]:         def(COLORS.behavioral, 'action'),
-  [NODE_TYPES.ACTION_USAGE]:       usage(COLORS.behavioral, 'action'),
-  [NODE_TYPES.PERFORM_ACTION_USAGE]: usage(COLORS.behavioral, 'perform'),
+  // States (green)
+  [NODE_TYPES.STATE_DEF]:          def('state-def', 'state'),
+  [NODE_TYPES.STATE_USAGE]:        usage('state-usage', 'state'),
+  [NODE_TYPES.EXHIBIT_STATE_USAGE]: usage('state-usage', 'exhibit'),
   
-  [NODE_TYPES.STATE_DEF]:          def(COLORS.behavioral, 'state'),
-  [NODE_TYPES.STATE_USAGE]:        usage(COLORS.behavioral, 'state'),
-  [NODE_TYPES.EXHIBIT_STATE_USAGE]: usage(COLORS.behavioral, 'exhibit'),
-  
-  [NODE_TYPES.CALCULATION_DEF]:    def(COLORS.behavioral, 'calculation'),
-  [NODE_TYPES.CALCULATION_USAGE]:  usage(COLORS.behavioral, 'calc'),
+  // Calculations (lime)
+  [NODE_TYPES.CALCULATION_DEF]:    def('calculation', 'calculation'),
+  [NODE_TYPES.CALCULATION_USAGE]:  usage('calculation', 'calc'),
 
-  // ==================== Requirements (Orange) ====================
-  // Requirements, concerns, constraints
+  // ==================== Requirements ====================
+  // Requirements (amber)
+  [NODE_TYPES.REQUIREMENT_DEF]:    def('requirement-def', 'requirement'),
+  [NODE_TYPES.REQUIREMENT_USAGE]:  usage('requirement-usage', 'requirement'),
+  [NODE_TYPES.SATISFY_REQUIREMENT_USAGE]: usage('requirement-usage', 'satisfy'),
   
-  [NODE_TYPES.REQUIREMENT_DEF]:    def(COLORS.requirement, 'requirement'),
-  [NODE_TYPES.REQUIREMENT_USAGE]:  usage(COLORS.requirement, 'requirement'),
-  [NODE_TYPES.SATISFY_REQUIREMENT_USAGE]: usage(COLORS.requirement, 'satisfy'),
+  // Concerns (use requirement colors)
+  [NODE_TYPES.CONCERN_DEF]:        def('requirement-def', 'concern'),
+  [NODE_TYPES.CONCERN_USAGE]:      usage('requirement-usage', 'concern'),
   
-  [NODE_TYPES.CONCERN_DEF]:        def(COLORS.requirement, 'concern'),
-  [NODE_TYPES.CONCERN_USAGE]:      usage(COLORS.requirement, 'concern'),
-  
-  [NODE_TYPES.CONSTRAINT_DEF]:     def(COLORS.requirement, 'constraint'),
-  [NODE_TYPES.CONSTRAINT_USAGE]:   usage(COLORS.requirement, 'constraint'),
+  // Constraints (orange)
+  [NODE_TYPES.CONSTRAINT_DEF]:     def('constraint', 'constraint'),
+  [NODE_TYPES.CONSTRAINT_USAGE]:   usage('constraint', 'constraint'),
 
-  // ==================== Cases (Indigo) ====================
-  // Use cases, analysis, verification
+  // ==================== Cases ====================
+  // Cases (indigo)
+  [NODE_TYPES.CASE_DEF]:           def('case-def', 'case'),
+  [NODE_TYPES.CASE_USAGE]:         usage('case-usage', 'case'),
   
-  [NODE_TYPES.CASE_DEF]:           def(COLORS.case, 'case'),
-  [NODE_TYPES.CASE_USAGE]:         usage(COLORS.case, 'case'),
+  [NODE_TYPES.USE_CASE_DEF]:       def('case-def', 'use case'),
+  [NODE_TYPES.INCLUDE_USE_CASE_USAGE]: usage('case-usage', 'include'),
   
-  [NODE_TYPES.USE_CASE_DEF]:       def(COLORS.case, 'use case'),
-  [NODE_TYPES.INCLUDE_USE_CASE_USAGE]: usage(COLORS.case, 'include'),
-  
-  [NODE_TYPES.ANALYSIS_CASE_DEF]:  def(COLORS.case, 'analysis case'),
-  [NODE_TYPES.VERIFICATION_CASE_DEF]: def(COLORS.case, 'verification case'),
+  [NODE_TYPES.ANALYSIS_CASE_DEF]:  def('case-def', 'analysis case'),
+  [NODE_TYPES.VERIFICATION_CASE_DEF]: def('case-def', 'verification case'),
 
-  // ==================== Views (Teal) ====================
-  // Views, viewpoints, rendering
+  // ==================== Views ====================
+  // Views (teal)
+  [NODE_TYPES.VIEW_DEF]:           def('view-def', 'view'),
+  [NODE_TYPES.VIEW_USAGE]:         usage('view-usage', 'view'),
   
-  [NODE_TYPES.VIEW_DEF]:           def(COLORS.view, 'view'),
-  [NODE_TYPES.VIEW_USAGE]:         usage(COLORS.view, 'view'),
-  
-  [NODE_TYPES.VIEWPOINT_DEF]:      def(COLORS.view, 'viewpoint'),
-  [NODE_TYPES.RENDERING_DEF]:      def(COLORS.view, 'rendering'),
+  [NODE_TYPES.VIEWPOINT_DEF]:      def('view-def', 'viewpoint'),
+  [NODE_TYPES.RENDERING_DEF]:      def('view-def', 'rendering'),
 
-  // ==================== Other (Slate) ====================
-  // Allocations, enumerations, metadata
+  // ==================== Other ====================
+  // Allocations
+  [NODE_TYPES.ALLOCATION_DEF]:     def('other', 'allocation'),
+  [NODE_TYPES.ALLOCATION_USAGE]:   usage('other', 'allocate'),
   
-  [NODE_TYPES.ALLOCATION_DEF]:     def(COLORS.other, 'allocation'),
-  [NODE_TYPES.ALLOCATION_USAGE]:   usage(COLORS.other, 'allocate'),
+  // Enumerations
+  [NODE_TYPES.ENUMERATION_DEF]:    def('attribute', 'enumeration'),
+  [NODE_TYPES.ENUMERATION_USAGE]:  usage('attribute', 'enum'),
   
-  [NODE_TYPES.ENUMERATION_DEF]:    def(COLORS.other, 'enumeration'),
-  [NODE_TYPES.ENUMERATION_USAGE]:  usage(COLORS.other, 'enum'),
+  // Metadata
+  [NODE_TYPES.METADATA_DEF]:       def('other', 'metadata'),
+
+  // ==================== KerML Types ====================
+  // Packages (slate)
+  [NODE_TYPES.PACKAGE]:            { category: 'package', stereotype: 'package', showFeatures: true },
+  [NODE_TYPES.LIBRARY_PACKAGE]:    { category: 'package', stereotype: 'library package', showFeatures: true },
+  [NODE_TYPES.FEATURE]:            { category: 'other', stereotype: 'feature', showFeatures: false },
   
-  [NODE_TYPES.METADATA_DEF]:       def(COLORS.other, 'metadata'),
+  // KerML Classifiers
+  [NODE_TYPES.TYPE_DEF]:           def('other', 'type'),
+  [NODE_TYPES.CLASSIFIER_DEF]:     def('other', 'classifier'),
+  [NODE_TYPES.CLASS_DEF]:          def('part-def', 'class'),
+  [NODE_TYPES.DATATYPE_DEF]:       def('attribute', 'datatype'),
+  [NODE_TYPES.STRUCTURE_DEF]:      def('part-def', 'struct'),
+  [NODE_TYPES.BEHAVIOR_DEF]:       def('action-def', 'behavior'),
+  [NODE_TYPES.FUNCTION_DEF]:       def('calculation', 'function'),
+  [NODE_TYPES.ASSOCIATION_DEF]:    def('connection', 'assoc'),
+  [NODE_TYPES.ASSOCIATION_STRUCTURE_DEF]: def('connection', 'assoc struct'),
+  [NODE_TYPES.METACLASS_DEF]:      def('other', 'metaclass'),
+  
+  // Default fallback for unknown types
+  'default':                       { category: 'other', stereotype: 'element', showFeatures: true },
 };
+
+/** Get config for a node type, with fallback to default */
+export function getNodeConfig(nodeType: string): NodeConfig {
+  return NODE_CONFIGS[nodeType] ?? NODE_CONFIGS['default'];
+}

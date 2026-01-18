@@ -36,7 +36,7 @@ function DiagramViewer({ nodes, edges }) {
 ## Dependencies
 
 - `@xyflow/react` - React Flow library
-- `@syster/diagram-core` - Core data types
+- `@opensyster/diagram-core` - Core data types
 
 ## License
 

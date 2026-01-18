@@ -1,21 +1,21 @@
 {
   "name": "@opensyster/diagram-ui",
-  "version": "0.0.1-alpha",
+  "version": "0.0.3-alpha",
   "type": "module",
   "main": "src/index.ts",
   "types": "src/index.ts",
   "scripts": {
     "test": "bun test",
-    "typecheck": "tsc --noEmit",
-    "build": "echo 'No build needed - source package'"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@opensyster/diagram-core": "^0.0.3-alpha",
     "@xyflow/react": "^12.10.0",
-    "react": "^18.2.0",
-    "@opensyster/diagram-core": "^0.0.2-alpha"
+    "elkjs": "^0.9.3",
+    "react": "^18.2.0"
   },
   "devDependencies": {
-    "@testing-library/react": "^16.3.1",
+    "@testing-library/react": "^14.3.1",
     "@types/bun": "^1.2.14",
     "@types/react": "^18.2.0",
     "happy-dom": "^20.1.0",
@@ -25,9 +25,5 @@
   "peerDependencies": {
     "@xyflow/react": "^12.0.0",
     "react": "^18.2.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/jade-codes/syster-diagram-ui.git"
   }
 }

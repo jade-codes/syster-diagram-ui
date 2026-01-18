@@ -9,8 +9,9 @@ mock.module('@xyflow/react', () => ({
   ReactFlowProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-import { createSysMLNode, nodeTypes, getNodeConfig } from '../nodes/nodeFactory';
+import { nodeTypes, getNodeConfig, UnifiedSysMLNode } from '../nodes/nodeFactory';
 import { NODE_CONFIGS } from '../nodes/nodeConfig';
+import { SysMLNode } from '../nodes/SysMLNode';
 
 // Clean up after each test to prevent DOM pollution
 afterEach(() => {
@@ -20,131 +21,124 @@ afterEach(() => {
 // Minimal test data - only includes fields the components actually use
 interface TestNodeData {
   name: string;
+  qualifiedName: string;
+  nodeType: string;
   features?: string[];
   direction?: string;
 }
 
-describe('createSysMLNode', () => {
-  test('creates a component with the specified stereotype', () => {
-    const TestNode = createSysMLNode({
-      borderColor: '#ff0000',
-      stereotype: 'test def',
-      showFeatures: true,
-    });
-
+describe('UnifiedSysMLNode', () => {
+  test('renders with config-based stereotype', () => {
     const data: TestNodeData = {
       name: 'TestElement',
+      qualifiedName: 'Pkg::TestElement',
+      nodeType: NODE_TYPES.PART_DEF,
     };
 
-    render(<TestNode id="test-1" data={data as any} />);
+    render(<UnifiedSysMLNode id="test-1" type={NODE_TYPES.PART_DEF} data={data as any} />);
 
-    expect(screen.getByText('«test def»')).toBeDefined();
+    expect(screen.getByText('«part def»')).toBeDefined();
     expect(screen.getByText('TestElement')).toBeDefined();
   });
 
-  test('shows features when showFeatures is true', () => {
-    const TestNode = createSysMLNode({
-      borderColor: '#ff0000',
-      stereotype: 'test def',
-      showFeatures: true,
-    });
-
+  test('shows features from config', () => {
     const data: TestNodeData = {
       name: 'TestElement',
+      qualifiedName: 'Pkg::TestElement',
+      nodeType: NODE_TYPES.PART_DEF,
       features: ['myFeature: Integer'],
     };
 
-    render(<TestNode id="test-1" data={data as any} />);
+    render(<UnifiedSysMLNode id="test-1" type={NODE_TYPES.PART_DEF} data={data as any} />);
 
     expect(screen.getByText('myFeature: Integer')).toBeDefined();
   });
 
   test('shows multiple features correctly', () => {
-    const TestNode = createSysMLNode({
-      borderColor: '#ff0000',
-      stereotype: 'test def',
-      showFeatures: true,
-    });
-
     const data: TestNodeData = {
       name: 'TestElement',
+      qualifiedName: 'Pkg::TestElement',
+      nodeType: NODE_TYPES.PART_DEF,
       features: ['feature1: String', 'feature2: Integer', 'feature3: Boolean'],
     };
 
-    render(<TestNode id="test-1" data={data as any} />);
+    render(<UnifiedSysMLNode id="test-1" type={NODE_TYPES.PART_DEF} data={data as any} />);
 
     expect(screen.getByText('feature1: String')).toBeDefined();
     expect(screen.getByText('feature2: Integer')).toBeDefined();
     expect(screen.getByText('feature3: Boolean')).toBeDefined();
   });
 
-  test('hides features when showFeatures is false', () => {
-    const TestNode = createSysMLNode({
-      borderColor: '#ff0000',
-      stereotype: 'test def',
-      showFeatures: false,
-    });
-
-    const data: TestNodeData = {
-      name: 'TestElement',
-      features: ['hiddenFeature: Integer'],
-    };
-
-    render(<TestNode id="test-1" data={data as any} />);
-
-    expect(screen.queryByText('hiddenFeature: Integer')).toBeNull();
-  });
-
-  test('hides direction when showDirection is false', () => {
-    const TestNode = createSysMLNode({
-      borderColor: '#ff0000',
-      stereotype: 'port def',
-      showDirection: false,
-    });
-
+  test('shows direction when showDirection is true in config', () => {
     const data: TestNodeData = {
       name: 'DataPort',
+      qualifiedName: 'Pkg::DataPort',
+      nodeType: NODE_TYPES.PORT_DEF,
       direction: 'in',
     };
 
-    render(<TestNode id="test-1" data={data as any} />);
-
-    expect(screen.queryByText('in')).toBeNull();
-  });
-
-  test('shows direction when showDirection is true', () => {
-    const TestNode = createSysMLNode({
-      borderColor: '#ff0000',
-      stereotype: 'port def',
-      showDirection: true,
-    });
-
-    const data: TestNodeData = {
-      name: 'DataPort',
-      direction: 'in',
-    };
-
-    render(<TestNode id="test-1" data={data as any} />);
+    render(<UnifiedSysMLNode id="test-1" type={NODE_TYPES.PORT_DEF} data={data as any} />);
 
     expect(screen.getByText('in')).toBeDefined();
   });
 
-  test('sets displayName based on stereotype', () => {
-    const TestNode = createSysMLNode({
-      borderColor: '#ff0000',
-      stereotype: 'part def',
-    });
+  test('has displayName set', () => {
+    expect(UnifiedSysMLNode.displayName).toBe('UnifiedSysMLNode');
+  });
 
-    expect(TestNode.displayName).toBe('partdefNode');
+  test('hides direction when showDirection is false', () => {
+    const data: TestNodeData = {
+      name: 'TestPart',
+      qualifiedName: 'Pkg::TestPart',
+      nodeType: NODE_TYPES.PART_DEF,
+      direction: 'inout', // Even with direction data, it should be hidden
+    };
+
+    render(<UnifiedSysMLNode id="test-1" type={NODE_TYPES.PART_DEF} data={data as any} />);
+
+    // Direction should not appear since part def doesn't have showDirection
+    expect(screen.queryByText('inout')).toBeNull();
+  });
+
+  test('shows typedBy when present', () => {
+    const data = {
+      name: 'myPart',
+      qualifiedName: 'Pkg::myPart',
+      nodeType: NODE_TYPES.PART_USAGE,
+      typedBy: 'Vehicle',
+    };
+
+    render(<UnifiedSysMLNode id="test-1" type={NODE_TYPES.PART_USAGE} data={data as any} />);
+
+    expect(screen.getByText(': Vehicle')).toBeDefined();
+  });
+
+  test('groups features into parts, attributes, and actions', () => {
+    const data: TestNodeData = {
+      name: 'TestElement',
+      qualifiedName: 'Pkg::TestElement',
+      nodeType: NODE_TYPES.PART_DEF,
+      features: [
+        'doSomething: Action',       // Should go to actions
+        'name: String',               // Should go to attributes (no colon with type)
+        'engine: Engine',             // Should go to parts
+        'performTask: action',        // Should go to actions (lowercase)
+        'attr_value: Integer',        // Should go to attributes (has attr)
+      ],
+    };
+
+    render(<UnifiedSysMLNode id="test-1" type={NODE_TYPES.PART_DEF} data={data as any} />);
+
+    // Check section headers
+    expect(screen.getByText('parts')).toBeDefined();
+    expect(screen.getByText('attributes')).toBeDefined();
+    expect(screen.getByText('actions')).toBeDefined();
   });
 });
 
 describe('nodeTypes', () => {
   test('contains all node types from NODE_CONFIGS', () => {
     const configKeys = Object.keys(NODE_CONFIGS);
-    const nodeTypeKeys = Object.keys(nodeTypes);
-
-    expect(nodeTypeKeys.length).toBe(configKeys.length);
     
     for (const key of configKeys) {
       expect(nodeTypes[key]).toBeDefined();
@@ -182,15 +176,21 @@ describe('nodeTypes', () => {
     }
   });
 
+  test('includes default fallback', () => {
+    expect(nodeTypes['default']).toBeDefined();
+  });
+
   test('renders a part def node correctly', () => {
     const PartDefNode = nodeTypes[NODE_TYPES.PART_DEF];
     
     const data: TestNodeData = {
       name: 'Vehicle',
+      qualifiedName: 'Pkg::Vehicle',
+      nodeType: NODE_TYPES.PART_DEF,
       features: ['engine: Engine'],
     };
 
-    render(<PartDefNode id="vehicle-1" data={data as any} />);
+    render(<PartDefNode id="vehicle-1" type={NODE_TYPES.PART_DEF} data={data as any} />);
 
     expect(screen.getByText('«part def»')).toBeDefined();
     expect(screen.getByText('Vehicle')).toBeDefined();
@@ -202,10 +202,12 @@ describe('nodeTypes', () => {
     
     const data: TestNodeData = {
       name: 'DataPort',
+      qualifiedName: 'Pkg::DataPort',
+      nodeType: NODE_TYPES.PORT_DEF,
       direction: 'out',
     };
 
-    render(<PortDefNode id="port-1" data={data as any} />);
+    render(<PortDefNode id="port-1" type={NODE_TYPES.PORT_DEF} data={data as any} />);
 
     expect(screen.getByText('«port def»')).toBeDefined();
     expect(screen.getByText('DataPort')).toBeDefined();
@@ -219,7 +221,7 @@ describe('getNodeConfig', () => {
 
     expect(config).toBeDefined();
     expect(config?.stereotype).toBe('part def');
-    expect(config?.borderColor).toBe('#2563eb');
+    expect(config?.category).toBe('part-def');
     expect(config?.showFeatures).toBe(true);
   });
 
@@ -231,10 +233,12 @@ describe('getNodeConfig', () => {
     expect(config?.showDirection).toBe(true);
   });
 
-  test('returns undefined for unknown node type', () => {
+  test('returns default config for unknown node type', () => {
     const config = getNodeConfig('unknown-type');
 
-    expect(config).toBeUndefined();
+    // Should return a default config
+    expect(config).toBeDefined();
+    expect(config?.category).toBe('other');
   });
 });
 
@@ -243,36 +247,42 @@ describe('NODE_CONFIGS', () => {
     const missingProps: string[] = [];
 
     for (const [type, config] of Object.entries(NODE_CONFIGS)) {
-      if (!config.borderColor) {
-        missingProps.push(`${type}: missing borderColor`);
+      if (!config.category) {
+        missingProps.push(`${type}: missing category`);
       }
-      if (!config.stereotype) {
-        missingProps.push(`${type}: missing stereotype`);
-      }
+      // stereotype can be empty for property-style nodes
     }
 
     expect(missingProps).toEqual([]);
   });
 
-  test('all border colors are valid hex colors', () => {
-    const invalidColors: string[] = [];
-    const hexColorRegex = /^#[0-9a-fA-F]{6}$/;
+  test('all configs have valid categories', () => {
+    const validCategories = [
+      'part-def', 'part-usage', 'item-def', 'item-usage', 'attribute',
+      'port-def', 'port-usage', 'interface', 'connection', 'flow',
+      'action-def', 'action-usage', 'state-def', 'state-usage', 'calculation',
+      'requirement-def', 'requirement-usage', 'constraint',
+      'case-def', 'case-usage', 'view-def', 'view-usage',
+      'package', 'other'
+    ];
+
+    const invalidCategories: string[] = [];
 
     for (const [type, config] of Object.entries(NODE_CONFIGS)) {
-      if (!hexColorRegex.test(config.borderColor)) {
-        invalidColors.push(`${type}: ${config.borderColor}`);
+      if (!validCategories.includes(config.category)) {
+        invalidCategories.push(`${type}: ${config.category}`);
       }
     }
 
-    expect(invalidColors).toEqual([]);
+    expect(invalidCategories).toEqual([]);
   });
 
   test('definition types have "def" in stereotype', () => {
-    const defTypes = Object.entries(NODE_CONFIGS).filter(([type]) => type.endsWith('-def'));
+    const defTypes = Object.entries(NODE_CONFIGS).filter(([type]) => type.includes('Def'));
     const invalidStereotypes: string[] = [];
 
     for (const [type, config] of defTypes) {
-      if (!config.stereotype.includes('def')) {
+      if (config.stereotype && !config.stereotype.includes('def')) {
         invalidStereotypes.push(`${type}: ${config.stereotype}`);
       }
     }
@@ -281,15 +291,102 @@ describe('NODE_CONFIGS', () => {
   });
 
   test('usage types do not have "def" in stereotype', () => {
-    const usageTypes = Object.entries(NODE_CONFIGS).filter(([type]) => type.endsWith('-usage'));
+    const usageTypes = Object.entries(NODE_CONFIGS).filter(([type]) => type.includes('Usage'));
     const invalidStereotypes: string[] = [];
 
     for (const [type, config] of usageTypes) {
-      if (config.stereotype.includes('def')) {
+      if (config.stereotype && config.stereotype.includes('def')) {
         invalidStereotypes.push(`${type}: ${config.stereotype}`);
       }
     }
 
     expect(invalidStereotypes).toEqual([]);
+  });
+});
+
+describe('SysMLNode direct rendering', () => {
+  test('renders in property mode with compact layout', () => {
+    const data = {
+      name: 'voltage',
+      qualifiedName: 'Pkg::voltage',
+      nodeType: 'AttributeUsage',
+    };
+
+    render(
+      <SysMLNode
+        id="prop-1"
+        data={data as any}
+        category="attribute"
+        stereotype="attribute"
+        isProperty={true}
+      />
+    );
+
+    expect(screen.getByText('voltage')).toBeDefined();
+  });
+
+  test('property mode shows typedBy', () => {
+    const data = {
+      name: 'voltage',
+      qualifiedName: 'Pkg::voltage',
+      nodeType: 'AttributeUsage',
+      typedBy: 'Real',
+    };
+
+    render(
+      <SysMLNode
+        id="prop-1"
+        data={data as any}
+        category="attribute"
+        stereotype="attribute"
+        isProperty={true}
+      />
+    );
+
+    expect(screen.getByText('voltage')).toBeDefined();
+    expect(screen.getByText(': Real')).toBeDefined();
+  });
+
+  test('renders non-property mode with full layout', () => {
+    const data = {
+      name: 'Engine',
+      qualifiedName: 'Pkg::Engine',
+      nodeType: NODE_TYPES.PART_DEF,
+    };
+
+    render(
+      <SysMLNode
+        id="part-1"
+        data={data as any}
+        category="part-def"
+        stereotype="part def"
+        isProperty={false}
+      />
+    );
+
+    expect(screen.getByText('«part def»')).toBeDefined();
+    expect(screen.getByText('Engine')).toBeDefined();
+  });
+
+  test('renders with no stereotype when empty', () => {
+    const data = {
+      name: 'GenericElement',
+      qualifiedName: 'Pkg::GenericElement',
+      nodeType: 'default',
+    };
+
+    render(
+      <SysMLNode
+        id="generic-1"
+        data={data as any}
+        category="other"
+        stereotype=""
+        showFeatures={false}
+      />
+    );
+
+    expect(screen.getByText('GenericElement')).toBeDefined();
+    // Should not have a stereotype line
+    expect(screen.queryByText(/«.*»/)).toBeNull();
   });
 });

@@ -1,7 +1,11 @@
 import { FC } from 'react';
 import { SysMLNode } from './SysMLNode';
-import { NodeConfig, NODE_CONFIGS } from './nodeConfig';
-import type { SymbolData } from '@opensyster/diagram-core';
+import { NodeConfig, NODE_CONFIGS, getNodeConfig } from './nodeConfig';
+import { NODE_TYPES } from '@opensyster/diagram-core';
+import type { DiagramSymbol } from '../types';
+
+/** Node data is the symbol data with additional layout info */
+type NodeData = DiagramSymbol & { [key: string]: unknown };
 
 /**
  * Props for SysML node components.
@@ -9,53 +13,18 @@ import type { SymbolData } from '@opensyster/diagram-core';
  */
 interface SysMLNodeProps {
   id: string;
-  data: SymbolData;
+  type: string;
+  data: NodeData;
 }
 
 /**
- * Creates a definition node component from configuration.
+ * Unified SysML node component.
  * 
- * This factory function generates React Flow node components for each
- * SysML node type, using the provided configuration to customize
- * appearance (border color, stereotype label, etc.).
- * 
- * @param config - Visual configuration for the node type
- * @returns A React Flow node component
+ * Looks up configuration from NODE_CONFIGS based on node type at render time.
+ * This replaces the previous pattern of generating 60+ separate components.
  * 
  * @example
  * ```tsx
- * const MyPartDefNode = createSysMLNode({
- *   borderColor: '#2563eb',
- *   stereotype: 'part def',
- *   showFeatures: true,
- * });
- * ```
- */
-export function createSysMLNode(config: NodeConfig): FC<SysMLNodeProps> {
-  const NodeComponent: FC<SysMLNodeProps> = ({ id, data }) => (
-    <SysMLNode
-      id={id}
-      data={data}
-      borderColor={config.borderColor}
-      stereotype={config.stereotype}
-      showFeatures={config.showFeatures}
-      showDirection={config.showDirection}
-    />
-  );
-  NodeComponent.displayName = `${config.stereotype.replace(/\s+/g, '')}Node`;
-  return NodeComponent;
-}
-
-/**
- * Generated React Flow node types map.
- * 
- * Maps each SysML node type string to its corresponding React component.
- * Use this object directly with React Flow's `nodeTypes` prop.
- * 
- * @example
- * ```tsx
- * import { nodeTypes } from '@syster/diagram-ui';
- * 
  * <ReactFlow
  *   nodes={nodes}
  *   edges={edges}
@@ -63,16 +32,38 @@ export function createSysMLNode(config: NodeConfig): FC<SysMLNodeProps> {
  * />
  * ```
  */
-export const nodeTypes: Record<string, FC<SysMLNodeProps>> = Object.fromEntries(
-  Object.entries(NODE_CONFIGS).map(([type, config]) => [type, createSysMLNode(config)])
-);
+export const UnifiedSysMLNode: FC<SysMLNodeProps> = ({ id, type, data }) => {
+  const config = getNodeConfig(type);
+  
+  return (
+    <SysMLNode
+      id={id}
+      data={data}
+      category={config.category}
+      stereotype={config.stereotype}
+      showFeatures={config.showFeatures}
+      showDirection={config.showDirection}
+      isProperty={config.isProperty}
+    />
+  );
+};
+
+UnifiedSysMLNode.displayName = 'UnifiedSysMLNode';
 
 /**
- * Gets the configuration for a specific node type.
+ * Node types map for React Flow.
  * 
- * @param nodeType - The SysML node type string
- * @returns The node configuration, or undefined if not found
+ * Registers the unified component for ALL known SysML node types.
+ * React Flow requires explicit registration for each type.
  */
-export function getNodeConfig(nodeType: string): NodeConfig | undefined {
-  return NODE_CONFIGS[nodeType];
-}
+export const nodeTypes: Record<string, FC<SysMLNodeProps>> = Object.fromEntries([
+  // Register all known SysML/KerML node types
+  ...Object.values(NODE_TYPES).map(type => [type, UnifiedSysMLNode]),
+  // Fallback for unknown types
+  ['default', UnifiedSysMLNode],
+]);
+
+// Re-export for consumers who need config access
+export { getNodeConfig, NODE_CONFIGS };
+export type { NodeConfig };
+
