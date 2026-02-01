@@ -49,7 +49,7 @@ export const SysMLNode: React.FC<SysMLNodeProps> = ({
   isProperty = false,
 }) => {
   const theme = useTheme();
-  const colors: CategoryColors = theme.categories[category];
+  const colors: CategoryColors = theme.categories[category] ?? theme.categories['other'];
   
   const features = (data.features as string[]) || [];
   const typedBy = data.typedBy as string | undefined;
